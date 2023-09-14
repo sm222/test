@@ -23,8 +23,7 @@ char	*get_env(char **en, char *seed, size_t j)
 		name = 0;
 		while (en[i][name] && en[i][name] != '=')
 			name++;
-		if (ft_strncmp(en[i], seed, name) == 0 && (seed[name] == spec || \
-			seed[name] == ' ' || seed[name] =='\0'))
+		if (ft_strncmp(en[i], seed, name) == 0 && !ft_isalpha(seed[name]))
 			return (en[i] + name + 1);
 		i++;
 	}
@@ -36,14 +35,34 @@ char	*edit_str(char *s, size_t i, char **en)
 	char	*s1;
 	char	*s2;
 	char	*new;
-	size_t	 j;
+	size_t	j;
 
 	j = i + 1;
 	s1 = ft_strndup(s , i);
-	while (s[j] && s[j] != ' ' && s[j] != spec)
+	while (s[j] && ft_isalpha(s[j]))
 		j++;
 	s2 = ft_strdup(s + j);
 	ft_printf(NO_PRINT, "%o%S%s%S", &new, s1, get_env(en, s + i + 1, j - i) ,s2);
+	ft_free(s);
+	return (new);
+}
+
+char	*pros_or_dolar(char *s, size_t i, char c)
+{
+	char	*s1;
+	char	*s2;
+	char	*new;
+	size_t	j;
+
+	j = i + 1;
+	s1 = ft_strndup(s , i);
+	j++;
+	s2 = ft_strdup(s + j);
+	printf("char = %c\n", c);
+	if (c == '?')
+		ft_printf(NO_PRINT, "%o%S%d%S", &new, s1, 255 ,s2);
+	if (c == '$')
+		ft_printf(NO_PRINT, "%o%S%c%S", &new, s1, '$' ,s2);
 	ft_free(s);
 	return (new);
 }
@@ -61,25 +80,22 @@ short	set_mode(char c)
 
 void	change_dolar(char **old, char **en)
 {
-	short	mode;
 	char	*new;
-	size_t	size;
-	size_t	i;
+	t_index	index;
 
-	i = 0;
+	ft_bzero(&index, sizeof(t_index));
 	new = *old;
-	mode = 0;
-	size = ft_strlen(new);
-	while (new &&  size > i)
+	index.j = ft_strlen(new);
+	while (index.j > index.i)
 	{
-		if (new[i] == spec && new[i + 1] != spec && mode == 0)
-		{
-			printf("bef %s\n", new);
-			new = edit_str(new, i, en);
-			size =  ft_strlen(new);
-			printf("after %s\n", new);
-		}
-		i++;
+		if (new[index.i] == spec && (new[index.i + 1] == ' ' || new[index.i + 1] == '\0'))
+			index.i++;
+		else if (new[index.i] == spec && (new[index.i + 1] == spec || (new[index.i + 1] == '?')))
+			new = pros_or_dolar(new, index.i, new[index.i + 1]);
+		else if (new[index.i] == spec)
+			new = edit_str(new, index.i, en);
+		index.i++;
+		index.j = ft_strlen(new);
 	}
 	*old = new;
 }
@@ -97,7 +113,7 @@ int	main(int ac, char **av, char **en)
 			return (1);
 		s[ft_strlen(s) - 1] = '\0';
 		change_dolar(&s, en);
-		printf("new = %s\n", s);
+		printf("out = %s\n", s);
 		ft_free(s);
 	}
 }
