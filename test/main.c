@@ -11,13 +11,41 @@
 
 # define spec '$'
 
+short	set_mode(char c)
+{
+	static	short last = 0;
+
+	if (c == -1)
+		last = 0;
+	if (last == 0 && c == '"')
+		last = 2;
+	else if (last == 2 && c == '"')
+		last = 0;
+	else if (last == 0 && c == '\'')
+		last = 1;
+	else if (last == 1 && c == '\'')
+		last = 0;
+	return (last);
+}
+
+/*
+size_t	get_len(const char *s, char c)
+{
+	size_t	i;
+
+	i = 0;
+	while (s && s[i] && s[i] != c)
+		i++;
+	return (i);
+}
+*/
+
 char	*get_env(char **en, char *seed, size_t j)
 {
 	size_t	i;
 	size_t	name;
 
 	i = 0;
-	Ct_mprintf(seed, ft_strlen(seed) + 1, 1, 'A');
 	while (en && en[i])
 	{
 		name = 0;
@@ -30,24 +58,27 @@ char	*get_env(char **en, char *seed, size_t j)
 	return (NULL);
 }
 
-char	*edit_str(char *s, size_t i, char **en)
+char	*edit_str(char *s, size_t i, char **en, size_t *k)
 {
 	char	*s1;
 	char	*s2;
 	char	*new;
 	size_t	j;
+	short	mode;
 
+	mode = set_mode(s[i + 1]);
 	j = i + 1;
-	s1 = ft_strndup(s , i);
+	s1 = ft_strndup(s, i);
 	while (s[j] && ft_isalpha(s[j]))
-		j++;
+		set_mode(s[j++]);
 	s2 = ft_strdup(s + j);
+	*k = ft_strlen(get_env(en, s + i + 1, j - i));
 	ft_printf(NO_PRINT, "%o%S%s%S", &new, s1, get_env(en, s + i + 1, j - i) ,s2);
 	ft_free(s);
 	return (new);
 }
 
-char	*pros_or_dolar(char *s, size_t i, char c)
+char	*pros_or_dolar(char *s, size_t i, char c, size_t *k)
 {
 	char	*s1;
 	char	*s2;
@@ -58,24 +89,18 @@ char	*pros_or_dolar(char *s, size_t i, char c)
 	s1 = ft_strndup(s , i);
 	j++;
 	s2 = ft_strdup(s + j);
-	printf("char = %c\n", c);
 	if (c == '?')
+	{
 		ft_printf(NO_PRINT, "%o%S%d%S", &new, s1, 255 ,s2);
+		*k = 1;
+	}
 	if (c == '$')
+	{
 		ft_printf(NO_PRINT, "%o%S%c%S", &new, s1, '$' ,s2);
+		*k = 1;
+	}
 	ft_free(s);
 	return (new);
-}
-
-short	set_mode(char c)
-{
-	static	short last = 0;
-
-	if (last == 0 && c == '"')
-		last = 2;
-	if (last == 0 && c == '\'')
-		last = 1;
-	return (last);
 }
 
 void	change_dolar(char **old, char **en)
@@ -86,14 +111,19 @@ void	change_dolar(char **old, char **en)
 	ft_bzero(&index, sizeof(t_index));
 	new = *old;
 	index.j = ft_strlen(new);
+	set_mode(-1);
 	while (index.j > index.i)
 	{
-		if (new[index.i] == spec && (new[index.i + 1] == ' ' || new[index.i + 1] == '\0'))
-			index.i++;
-		else if (new[index.i] == spec && (new[index.i + 1] == spec || (new[index.i + 1] == '?')))
-			new = pros_or_dolar(new, index.i, new[index.i + 1]);
-		else if (new[index.i] == spec)
-			new = edit_str(new, index.i, en);
+		if (set_mode(new[index.i]) != 1)
+		{
+			index.k = 0;
+			if (new[index.i] == spec && (new[index.i + 1] == ' ' || new[index.i + 1] == '\0'))
+				index.i++;
+			else if (new[index.i] == spec && (new[index.i + 1] == spec || (new[index.i + 1] == '?')))
+				new = pros_or_dolar(new, index.i, new[index.i + 1], &index.k);
+			else if (new[index.i] == spec)
+				new = edit_str(new, index.i, en, &index.k);
+		}
 		index.i++;
 		index.j = ft_strlen(new);
 	}
