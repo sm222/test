@@ -1,15 +1,4 @@
-# include "lib_ft/libft.h"
-# include "C_tools/inc/C_tool.h"
-# include <stdio.h>
-# include <unistd.h>
-# include <fcntl.h>
-# include <stdlib.h>
-# include <sys/types.h>
-# include <sys/stat.h>
-# include "readline/readline.h"
-# include <limits.h>
-
-# define spec '$'
+#include "test.h"
 
 short	set_mode(char c)
 {
@@ -58,22 +47,24 @@ char	*get_env(char **en, char *seed, size_t j)
 	return (NULL);
 }
 
-char	*edit_str(char *s, size_t i, char **en, size_t *k)
+
+
+char	*edit_str(char *s, size_t *i, char **en)
 {
 	char	*s1;
 	char	*s2;
 	char	*new;
 	size_t	j;
-	short	mode;
 
-	mode = set_mode(s[i + 1]);
-	j = i + 1;
-	s1 = ft_strndup(s, i);
+	if (set_mode(s[*i + 1]) != 0)
+		return (make_new_str(s, i));
+	j = *i + 1;
+	s1 = ft_strndup(s, *i);
 	while (s[j] && ft_isalpha(s[j]))
 		set_mode(s[j++]);
 	s2 = ft_strdup(s + j);
-	*k = ft_strlen(get_env(en, s + i + 1, j - i));
-	ft_printf(NO_PRINT, "%o%S%s%S", &new, s1, get_env(en, s + i + 1, j - i) ,s2);
+	printf("1=%s\n2=%s\n", s1, s2);
+	ft_printf(NO_PRINT, "%o%S%s%S", &new, s1, get_env(en, s + *i + 1, j - *i) ,s2);
 	ft_free(s);
 	return (new);
 }
@@ -116,13 +107,12 @@ void	change_dolar(char **old, char **en)
 	{
 		if (set_mode(new[index.i]) != 1)
 		{
-			index.k = 0;
 			if (new[index.i] == spec && (new[index.i + 1] == ' ' || new[index.i + 1] == '\0'))
 				index.i++;
 			else if (new[index.i] == spec && (new[index.i + 1] == spec || (new[index.i + 1] == '?')))
 				new = pros_or_dolar(new, index.i, new[index.i + 1], &index.k);
 			else if (new[index.i] == spec)
-				new = edit_str(new, index.i, en, &index.k);
+				new = edit_str(new, &index.i, en);
 		}
 		index.i++;
 		index.j = ft_strlen(new);

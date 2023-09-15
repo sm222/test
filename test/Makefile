@@ -1,7 +1,10 @@
 NAME	=	a.out
 
+SRC	=	test_str.c\
+		main.c
+
 all : lib
-	gcc main.c C_tools/C_tool.a lib_ft/libft.a -o $(NAME)
+	gcc $(SRC) C_tools/C_tool.a lib_ft/libft.a -o $(NAME)
 
 lib :
 	make -C lib_ft
